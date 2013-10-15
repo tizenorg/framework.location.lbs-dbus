@@ -30,7 +30,7 @@ Requires(post): sys-assert
 LBS client API library
 
 %package -n liblbs-dbus-devel
-Summary:    Telephony client API (devel)
+Summary:   dbus API (devel)
 Group:      Development/Libraries
 Requires:   liblbs-dbus = %{version}-%{release}
 
@@ -50,16 +50,17 @@ make %{?jobs:-j%jobs}
 
 %install
 rm -rf %{buildroot}
-%make_install
 mkdir -p %{buildroot}/usr/share/license
+cp %{_builddir}/%{name}-%{version}/LICENSE %{buildroot}/usr/share/license/%{name}
+%make_install
 
 %post -p /sbin/ldconfig
 
 %postun -p /sbin/ldconfig
 
-
 %files -n liblbs-dbus
 %manifest liblbs-dbus.manifest
+/usr/share/license/%{name}
 %defattr(-,root,root,-)
 #%doc COPYING
 %{_libdir}/*.so.*
