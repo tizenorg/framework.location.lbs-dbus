@@ -51,7 +51,7 @@ make %{?jobs:-j%jobs}
 %install
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/share/license
-cp %{_builddir}/%{name}-%{version}/LICENSE %{buildroot}/usr/share/license/%{name}
+cp %{_builddir}/%{name}-%{version}/LICENSE %{buildroot}/usr/share/license/liblbs-dbus
 %make_install
 
 %post -p /sbin/ldconfig
@@ -60,7 +60,6 @@ cp %{_builddir}/%{name}-%{version}/LICENSE %{buildroot}/usr/share/license/%{name
 
 %files -n liblbs-dbus
 %manifest liblbs-dbus.manifest
-/usr/share/license/%{name}
 %defattr(-,root,root,-)
 #%doc COPYING
 %{_libdir}/*.so.*
