@@ -14,7 +14,7 @@ MESSAGE(CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR})
 
 ADD_CUSTOM_COMMAND(
 	OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/generated-code.c
-	COMMAND gdbus-codegen --interface-prefix org.tizen.lbs. --generate-c-code generated-code --c-generate-object-manager --c-namespace Lbs --generate-docbook generated-docs ${CMAKE_SOURCE_DIR}/introspection/lbs.xml ${CMAKE_SOURCE_DIR}/introspection/lbs_position.xml ${CMAKE_SOURCE_DIR}/introspection/lbs_satellite.xml ${CMAKE_SOURCE_DIR}/introspection/lbs_nmea.xml
+	COMMAND gdbus-codegen --interface-prefix org.tizen.lbs. --generate-c-code generated-code --c-generate-object-manager --c-namespace Lbs --generate-docbook generated-docs ${CMAKE_SOURCE_DIR}/introspection/lbs.xml ${CMAKE_SOURCE_DIR}/introspection/lbs_position.xml ${CMAKE_SOURCE_DIR}/introspection/lbs_batch.xml ${CMAKE_SOURCE_DIR}/introspection/lbs_satellite.xml ${CMAKE_SOURCE_DIR}/introspection/lbs_nmea.xml ${CMAKE_SOURCE_DIR}/introspection/lbs_gps_geofence.xml
 	COMMENT "Generating GDBus .c/.h")
 
 ADD_LIBRARY(lbs-dbus-server SHARED ${SRCS_S})

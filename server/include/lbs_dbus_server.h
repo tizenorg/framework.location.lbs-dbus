@@ -4,7 +4,7 @@
  * Copyright (c) 2013 Samsung Electronics Co., Ltd. All rights reserved.
  *
  * Contact: Youngae Kang <youngae.kang@samsung.com>, Minjune Kim <sena06.kim@samsung.com>
- *          Genie Kim <daejins.kim@samsung.com>, Ming Zhu <mingwu.zhu@samsung.com>
+ *			Genie Kim <daejins.kim@samsung.com>, Ming Zhu <mingwu.zhu@samsung.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,46 @@ __BEGIN_DECLS
 
 #include <gio/gio.h>
 
-typedef void (*LbsDbusSetOptionsCB)(GVariant *options, gpointer userdata);
-typedef void (*LbsDbusShutdownCB)(gpointer userdata);
+typedef void (*LbsDbusSetOptionsCB)(GVariant *options, const gchar *client, gpointer userdata);
+typedef void (*LbsDbusShutdownCB)(gpointer userdata, gboolean* shutdown_arr);
 
+typedef enum {
+	LBS_SERVER_INTERVAL_ADD = 0,
+	LBS_SERVER_INTERVAL_REMOVE,
+	LBS_SERVER_INTERVAL_UPDATE,
+} lbs_server_interval_manipulation_type;
+typedef gboolean (*LbsDbusUpdateIntervalCB)(lbs_server_interval_manipulation_type type, const gchar *client, int method, guint interval, gpointer userdata);
+typedef void (*LbsDbusRequestChangeIntervalCB)(int method, gpointer userdata);
+
+
+/* for geofence callbacks */
+typedef gint (*LbsGeofenceAddFenceCB)(const gchar *app_id,
+		gint geofence_type,
+		const gchar *name,
+		gint direction,
+		gdouble latitude,
+		gdouble longitude,
+		gdouble radius,
+		const gchar *bssid,
+		gpointer userdata);
+typedef void (*LbsGeofenceRemoveFenceCB)(gint fence_id, const gchar *app_id, gpointer userdata);
+typedef void (*LbsGeofencePauseFenceCB)(gint fence_id, const gchar *app_id, gpointer userdata);
+typedef void (*LbsGeofenceResumeFenceCB)(gint fence_id, const gchar *app_id, gpointer userdata);
+typedef void (*LbsGeofenceStartGeofenceCB)(const gchar *app_id, gpointer userdata);
+typedef void (*LbsGeofenceStopGeofenceCB)(const gchar *app_id,gpointer userdata);
+/* for gps-geofence (H/W geofence) callbacks */
+typedef void (*GpsGeofenceAddFenceCB)(gint fence_id,
+		gdouble latitude,
+		gdouble longitude,
+		gint radius,
+		gint last_state,
+		gint monitor_states,
+		gint notification_responsiveness,
+		gint unknown_timer,
+		gpointer userdata);
+typedef void (*GpsGeofenceDeleteFenceCB)(gint fence_id, gpointer userdata);
+typedef void (*GpsGeofencePauseFenceCB)(gint fence_id, gpointer userdata);
+typedef void (*GpsGeofenceResumeFenceCB)(gint fence_id, gint monitor_states, gpointer userdata);
 
 typedef enum {
 	LBS_SERVER_ERROR_NONE = 0x0,
@@ -45,6 +82,7 @@ typedef void *lbs_server_dbus_h;
 
 int
 lbs_server_emit_position_changed(lbs_server_dbus_h lbs_server,
+				gint arg_method,
 				gint arg_fields,
 				gint arg_timestamp,
 				gdouble arg_latitude,
@@ -54,6 +92,10 @@ lbs_server_emit_position_changed(lbs_server_dbus_h lbs_server,
 				gdouble arg_direction,
 				gdouble arg_climb,
 				GVariant *arg_accuracy);
+
+int
+lbs_server_emit_batch_changed(lbs_server_dbus_h lbs_server,
+				gint arg_num_of_location);
 
 int
 lbs_server_emit_satellite_changed(lbs_server_dbus_h lbs_server,
@@ -69,8 +111,21 @@ lbs_server_emit_nmea_changed(lbs_server_dbus_h lbs_server,
 			const gchar *arg_nmea_data);
 
 int
-lbs_server_emit_status_changed(lbs_server_dbus_h lbs_server, gint status);
+lbs_server_emit_status_changed(lbs_server_dbus_h lbs_server, int method, gint status);
 
+int
+lbs_server_emit_geofence_status_changed(lbs_server_dbus_h lbs_server, gint status);
+
+int
+lbs_server_emit_geofence_changed(lbs_server_dbus_h lbs_server, const gchar *app_id, gint fence_id, gint fence_state);
+
+int
+lbs_server_emit_gps_geofence_status_changed(lbs_server_dbus_h lbs_server, gint status);
+
+int
+lbs_server_emit_gps_geofence_changed(lbs_server_dbus_h lbs_server, gint fence_id, gint transition, gdouble latitude, gdouble longitude, gdouble altitude, gdouble speed, gdouble bearing, gdouble hor_accuracy);
+
+// Fixme: let's merge callbacks for lbs_server_create later
 int
 lbs_server_create(char *service_name,
 			char *service_path,
@@ -79,8 +134,13 @@ lbs_server_create(char *service_name,
 			lbs_server_dbus_h *lbs_server,
 			LbsDbusSetOptionsCB set_options_cb,
 			LbsDbusShutdownCB shutdown_cb,
+			LbsDbusUpdateIntervalCB update_interval_cb,
+			LbsDbusRequestChangeIntervalCB request_change_interval_cb,
+			GpsGeofenceAddFenceCB add_hw_fence_cb,
+			GpsGeofenceDeleteFenceCB delete_hw_fence_cb,
+			GpsGeofencePauseFenceCB pause_hw_fence_cb,
+			GpsGeofenceResumeFenceCB resume_hw_fence_cb,
 			gpointer userdata);
-
 
 int
 lbs_server_destroy (lbs_server_dbus_h lbs_server);
