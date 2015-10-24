@@ -24,6 +24,7 @@
 #include <package_manager.h>
 #include "lbs_dbus_client.h"
 #include "lbs_dbus_client_priv.h"
+#include "generated-code.h"
 
 #define LOCATION_PRIVACY_ID	"http://tizen.org/privacy/location"
 #define PRIVACY_INTERFACE	"org.tizen.privacy_manager.signal"
@@ -133,7 +134,7 @@ static int __lbs_check_package_id(char *pkg_id)
 }
 
 
-static void __signal_batch_callback (GDBusConnection *conn, const gchar *name, const gchar *path, const gchar *interface, const gchar *sig, GVariant *param, gpointer user_data)
+static void __signal_batch_callback(GDBusConnection *conn, const gchar *name, const gchar *path, const gchar *interface, const gchar *sig, GVariant *param, gpointer user_data)
 {
 	lbs_client_dbus_s *handle = (lbs_client_dbus_s *)user_data;
 	if (handle == NULL) {
@@ -151,7 +152,7 @@ static void __signal_batch_callback (GDBusConnection *conn, const gchar *name, c
 	}
 }
 
-static void __signal_callback (GDBusConnection *conn, const gchar *name, const gchar *path, const gchar *interface, const gchar *sig, GVariant *param, gpointer user_data)
+static void __signal_callback(GDBusConnection *conn, const gchar *name, const gchar *path, const gchar *interface, const gchar *sig, GVariant *param, gpointer user_data)
 {
 	lbs_client_dbus_s *handle = (lbs_client_dbus_s *)user_data;
 	if (handle == NULL) {
@@ -169,8 +170,10 @@ static void __signal_callback (GDBusConnection *conn, const gchar *name, const g
 	}
 }
 
-static void __privacy_setting_changed (GDBusConnection *conn, const gchar *name, const gchar *path, const gchar *interface, const gchar *sig, GVariant *param, gpointer user_data)
+static void __privacy_setting_changed(GDBusConnection *conn, const gchar *name, const gchar *path, const gchar *interface, const gchar *sig, GVariant *param, gpointer user_data)
 {
+	LBS_CLIENT_LOGD("ENTER >>>");
+
 	gchar *pkg_id = NULL;
 	gchar *privacy_id = NULL;
 
@@ -206,6 +209,8 @@ static void __privacy_setting_changed (GDBusConnection *conn, const gchar *name,
 		g_free(privacy_id);
 		return;
 	}
+	g_free(pkg_id);
+	g_free(privacy_id);
 
 	if (lbs_client_stop(handle) != LBS_CLIENT_ERROR_NONE) {
 		LBS_CLIENT_LOGE("lbs_client_stop is fail");
@@ -215,8 +220,10 @@ static void __privacy_setting_changed (GDBusConnection *conn, const gchar *name,
 		handle->user_cb("StatusChanged", g_variant_new("(i)", FALSE), handle->user_data);
 	}
 
-	g_free(pkg_id);
-	g_free(privacy_id);
+	lbs_client_destroy(handle);
+	handle = NULL;
+
+	LBS_CLIENT_LOGD("EXIT <<<");
 }
 
 static void
@@ -267,12 +274,12 @@ lbs_client_privacy_signal_subcribe(lbs_client_dbus_h lbs_client)
 
 	lbs_client_dbus_s *handle = (lbs_client_dbus_s *)lbs_client;
 	handle->privacy_evt_id = g_dbus_connection_signal_subscribe(handle->conn, NULL,
-					PRIVACY_INTERFACE,
-					PRIVACY_MEMBER,
-					PRIVACY_PATH,
-					NULL, G_DBUS_SIGNAL_FLAGS_NONE,
-					__privacy_setting_changed, handle,
-					NULL);
+	                                                            PRIVACY_INTERFACE,
+	                                                            PRIVACY_MEMBER,
+	                                                            PRIVACY_PATH,
+	                                                            NULL, G_DBUS_SIGNAL_FLAGS_NONE,
+	                                                            __privacy_setting_changed, handle,
+	                                                            NULL);
 
 	if (handle->privacy_evt_id) {
 		LBS_CLIENT_LOGD("Listening Privacy info");
@@ -298,11 +305,11 @@ lbs_client_start_batch(lbs_client_dbus_h lbs_client, lbs_client_callback_e callb
 {
 	LBS_CLIENT_LOGD("lbs_client_start_batch");
 
-	g_return_val_if_fail (lbs_client, LBS_CLIENT_ERROR_PARAMETER);
-	g_return_val_if_fail (callback_type, LBS_CLIENT_ERROR_PARAMETER);
+	g_return_val_if_fail(lbs_client, LBS_CLIENT_ERROR_PARAMETER);
+	g_return_val_if_fail(callback_type, LBS_CLIENT_ERROR_PARAMETER);
 
 	lbs_client_dbus_s *handle = (lbs_client_dbus_s *)lbs_client;
-	g_return_val_if_fail (handle->is_started == FALSE, LBS_CLIENT_ERROR_STATUS);
+	g_return_val_if_fail(handle->is_started == FALSE, LBS_CLIENT_ERROR_STATUS);
 
 	GVariant *reg = NULL;
 	GVariant *param = NULL, *method = NULL;
@@ -312,7 +319,7 @@ lbs_client_start_batch(lbs_client_dbus_h lbs_client, lbs_client_callback_e callb
 	gchar *signal_path = NULL;
 	int ret = LBS_CLIENT_ERROR_NONE;
 
-	signal_path = g_strdup_printf ("%s/%s", SERVICE_PATH, "SAMSUNG");
+	signal_path = g_strdup_printf("%s/%s", SERVICE_PATH, "SAMSUNG");
 	LBS_CLIENT_SECLOG("LBS signal subscribe Object Path [%s]", signal_path);
 
 	if (callback) {
@@ -320,15 +327,15 @@ lbs_client_start_batch(lbs_client_dbus_h lbs_client, lbs_client_callback_e callb
 		handle->user_data = user_data;
 
 		if (callback_type & LBS_CLIENT_BATCH_CB) {
-			handle->batch_evt_id= g_dbus_connection_signal_subscribe(handle->conn,
-					SERVICE_NAME,			//GPS_MANAGER_SERVICE_NAME, /* Sender */
-					"org.tizen.lbs.Batch",	/* Interface */
-					"BatchChanged",			/* Member */
-					signal_path,			//GPS_MANAGER_SERVICE_PATH, /* Object */
-					NULL,					/* arg0 */
-					G_DBUS_SIGNAL_FLAGS_NONE,
-					__signal_batch_callback, handle,
-					NULL);
+			handle->batch_evt_id = g_dbus_connection_signal_subscribe(handle->conn,
+			                                                          SERVICE_NAME,			/* Sender */
+			                                                          "org.tizen.lbs.Batch",	/* Interface */
+			                                                          "BatchChanged",			/* Member */
+			                                                          signal_path,			/* Object */
+			                                                          NULL,					/* arg0 */
+			                                                          G_DBUS_SIGNAL_FLAGS_NONE,
+			                                                          __signal_batch_callback, handle,
+			                                                          NULL);
 
 			if (handle->batch_evt_id) {
 				LBS_CLIENT_LOGD("Listening batch info");
@@ -339,22 +346,22 @@ lbs_client_start_batch(lbs_client_dbus_h lbs_client, lbs_client_callback_e callb
 	}
 	g_free(signal_path);
 
-	// Start Batch
+	/* Start Batch */
 	LBS_CLIENT_LOGD("START: CMD-START_BATCH");
-	builder = g_variant_builder_new(G_VARIANT_TYPE ("a{sv}"));
+	builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
 	g_variant_builder_add(builder, "{sv}", "CMD", g_variant_new_string("START_BATCH"));
 	g_variant_builder_add(builder, "{sv}", "BATCH_INTERVAL", g_variant_new_int32((gint32) batch_interval));
 	g_variant_builder_add(builder, "{sv}", "BATCH_PERIOD", g_variant_new_int32((gint32) batch_period));
-	param = g_variant_ref_sink(g_variant_new ("(@a{sv})", g_variant_builder_end(builder)));
-	method = g_variant_ref_sink(g_variant_new ("(i)", handle->method));
+	param = g_variant_ref_sink(g_variant_new("(@a{sv})", g_variant_builder_end(builder)));
+	method = g_variant_ref_sink(g_variant_new("(i)", handle->method));
 
-	proxy = g_dbus_proxy_new_sync (handle->conn, // GDBusConnection
-					G_DBUS_PROXY_FLAGS_NONE, //GDbusProxyFlags
-					NULL,
-					SERVICE_NAME,SERVICE_PATH,
-					"org.tizen.lbs.Manager",
-					NULL,
-					&error);
+	proxy = g_dbus_proxy_new_sync(handle->conn,  /* GDBusConnection */
+	                              G_DBUS_PROXY_FLAGS_NONE, /*GDbusProxyFlags */
+	                              NULL,
+	                              SERVICE_NAME, SERVICE_PATH,
+	                              "org.tizen.lbs.Manager",
+	                              NULL,
+	                              &error);
 
 	if (error && error->message) {
 		if (error->code == G_DBUS_ERROR_ACCESS_DENIED) {
@@ -364,7 +371,7 @@ lbs_client_start_batch(lbs_client_dbus_h lbs_client, lbs_client_callback_e callb
 			LBS_CLIENT_LOGE("Fail to new proxy ErrCode[%d], Msg[%s]", error->code, error->message);
 			ret = LBS_CLIENT_ERROR_DBUS_CALL;
 		}
-		g_error_free (error);
+		g_error_free(error);
 		g_variant_unref(param);
 		g_variant_unref(method);
 		lbs_client_signal_unsubcribe(handle);
@@ -373,12 +380,12 @@ lbs_client_start_batch(lbs_client_dbus_h lbs_client, lbs_client_callback_e callb
 
 	if (proxy) {
 		reg = g_dbus_proxy_call_sync(proxy,
-						"AddReference",
-						method,
-						G_DBUS_CALL_FLAGS_NONE,
-						-1,
-						NULL,
-						&error);
+		                             "AddReference",
+		                             method,
+		                             G_DBUS_CALL_FLAGS_NONE,
+		                             -1,
+		                             NULL,
+		                             &error);
 
 		if (error && error->message) {
 			if (error->code == G_DBUS_ERROR_ACCESS_DENIED) {
@@ -388,7 +395,7 @@ lbs_client_start_batch(lbs_client_dbus_h lbs_client, lbs_client_callback_e callb
 				LBS_CLIENT_LOGE("Fail to new proxy ErrCode[%d], Msg[%s]", error->code, error->message);
 				ret = LBS_CLIENT_ERROR_DBUS_CALL;
 			}
-			g_error_free (error);
+			g_error_free(error);
 			g_variant_unref(param);
 			g_variant_unref(method);
 			lbs_client_signal_unsubcribe(handle);
@@ -400,12 +407,12 @@ lbs_client_start_batch(lbs_client_dbus_h lbs_client, lbs_client_callback_e callb
 		}
 
 		reg = g_dbus_proxy_call_sync(proxy,
-						"SetOptions",
-						param,
-						G_DBUS_CALL_FLAGS_NO_AUTO_START,
-						-1,
-						NULL,
-						&error);
+		                             "SetOptions",
+		                             param,
+		                             G_DBUS_CALL_FLAGS_NO_AUTO_START,
+		                             -1,
+		                             NULL,
+		                             &error);
 
 		if (error && error->message) {
 			if (error->code == G_DBUS_ERROR_ACCESS_DENIED) {
@@ -415,7 +422,7 @@ lbs_client_start_batch(lbs_client_dbus_h lbs_client, lbs_client_callback_e callb
 				LBS_CLIENT_LOGE("Fail to new proxy ErrCode[%d], Msg[%s]", error->code, error->message);
 				ret = LBS_CLIENT_ERROR_DBUS_CALL;
 			}
-			g_error_free (error);
+			g_error_free(error);
 			g_variant_unref(param);
 			g_variant_unref(method);
 
@@ -446,8 +453,8 @@ lbs_client_set_position_update_interval(lbs_client_dbus_h lbs_client, unsigned i
 	LBS_CLIENT_LOGD("lbs_client_set_position_update_interval");
 	lbs_client_dbus_s *handle = (lbs_client_dbus_s *)lbs_client;
 
-	g_return_val_if_fail (handle, LBS_CLIENT_ERROR_PARAMETER);
-	g_return_val_if_fail (handle->is_started == TRUE, LBS_CLIENT_ERROR_STATUS);
+	g_return_val_if_fail(handle, LBS_CLIENT_ERROR_PARAMETER);
+	g_return_val_if_fail(handle->is_started == TRUE, LBS_CLIENT_ERROR_STATUS);
 
 	GVariant *reg = NULL;
 	GVariant *param = NULL;
@@ -457,32 +464,32 @@ lbs_client_set_position_update_interval(lbs_client_dbus_h lbs_client, unsigned i
 	GDBusProxy *proxy = NULL;
 	gchar *signal_path = NULL;
 
-	signal_path = g_strdup_printf ("%s/%s", SERVICE_PATH, "SAMSUNG");
+	signal_path = g_strdup_printf("%s/%s", SERVICE_PATH, "SAMSUNG");
 	LBS_CLIENT_LOGD("LBS signal subscribe Object Path [%s]", signal_path);
 	g_free(signal_path);
 
 	LBS_CLIENT_LOGD("SET option INTERVAL_UPDATE:[%u], method:[%d]", interval, method);
-	builder = g_variant_builder_new(G_VARIANT_TYPE ("a{sv}"));
+	builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
 	g_variant_builder_add(builder, "{sv}", "CMD", g_variant_new_string("SET:OPT"));
 	g_variant_builder_add(builder, "{sv}", "INTERVAL_UPDATE", g_variant_new_uint32(interval));
 	g_variant_builder_add(builder, "{sv}", "METHOD", g_variant_new_int32(handle->method));
-	param = g_variant_ref_sink(g_variant_new ("(@a{sv})", g_variant_builder_end(builder)));
-	method = g_variant_ref_sink(g_variant_new ("(i)", handle->method));
+	param = g_variant_ref_sink(g_variant_new("(@a{sv})", g_variant_builder_end(builder)));
+	method = g_variant_ref_sink(g_variant_new("(i)", handle->method));
 
-	proxy = g_dbus_proxy_new_sync (handle->conn, // GDBusConnection
-					G_DBUS_PROXY_FLAGS_NONE, //GDbusProxyFlags
-					NULL, SERVICE_NAME,SERVICE_PATH,
-					"org.tizen.lbs.Manager",
-					NULL,
-					&error);
+	proxy = g_dbus_proxy_new_sync(handle->conn,  /* GDBusConnection */
+	                              G_DBUS_PROXY_FLAGS_NONE, /*GDbusProxyFlags */
+	                              NULL, SERVICE_NAME, SERVICE_PATH,
+	                              "org.tizen.lbs.Manager",
+	                              NULL,
+	                              &error);
 	if (proxy) {
 		reg = g_dbus_proxy_call_sync(proxy,
-						"SetOptions",
-						param,
-						G_DBUS_CALL_FLAGS_NO_AUTO_START,
-						-1,
-						NULL,
-						&error);
+		                             "SetOptions",
+		                             param,
+		                             G_DBUS_CALL_FLAGS_NO_AUTO_START,
+		                             -1,
+		                             NULL,
+		                             &error);
 		if (reg) {
 			g_variant_unref(reg);
 			reg = NULL;
@@ -503,8 +510,8 @@ lbs_client_stop_batch(lbs_client_dbus_h lbs_client)
 	LBS_CLIENT_LOGD("lbs_client_stop_batch");
 
 	lbs_client_dbus_s *handle = (lbs_client_dbus_s *)lbs_client;
-	g_return_val_if_fail (handle, LBS_CLIENT_ERROR_PARAMETER);
-	g_return_val_if_fail (handle->is_started == TRUE, LBS_CLIENT_ERROR_STATUS);
+	g_return_val_if_fail(handle, LBS_CLIENT_ERROR_PARAMETER);
+	g_return_val_if_fail(handle->is_started == TRUE, LBS_CLIENT_ERROR_STATUS);
 
 	int ret = LBS_CLIENT_ERROR_NONE;
 	GVariant *param = NULL, *method = NULL, *reg = NULL;
@@ -514,23 +521,23 @@ lbs_client_stop_batch(lbs_client_dbus_h lbs_client)
 	lbs_client_privacy_signal_unsubcribe(handle);
 	lbs_client_signal_unsubcribe(handle);
 
-	// Stop
+	/* Stop */
 	LBS_CLIENT_LOGD("STOP: CMD-STOP_BATCH");
-	builder = g_variant_builder_new(G_VARIANT_TYPE ("a{sv}"));
+	builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
 	g_variant_builder_add(builder, "{sv}", "CMD", g_variant_new_string("STOP_BATCH"));
 
 	LBS_CLIENT_LOGD("METHOD: %d", handle->method);
 	g_variant_builder_add(builder, "{sv}", "METHOD", g_variant_new_int32(handle->method));
-	param = g_variant_ref_sink(g_variant_new ("(@a{sv})", g_variant_builder_end(builder)));
-	method = g_variant_ref_sink(g_variant_new ("(i)", handle->method));
+	param = g_variant_ref_sink(g_variant_new("(@a{sv})", g_variant_builder_end(builder)));
+	method = g_variant_ref_sink(g_variant_new("(i)", handle->method));
 
 	GDBusProxy *proxy = NULL;
-	proxy = g_dbus_proxy_new_sync (handle->conn, // GDBusConnection
-						G_DBUS_PROXY_FLAGS_NONE, //GDbusProxyFlags
-						NULL,SERVICE_NAME,SERVICE_PATH,
-						"org.tizen.lbs.Manager",
-						NULL,
-						&error);
+	proxy = g_dbus_proxy_new_sync(handle->conn,  /* GDBusConnection */
+	                              G_DBUS_PROXY_FLAGS_NONE, /*GDbusProxyFlags */
+	                              NULL, SERVICE_NAME, SERVICE_PATH,
+	                              "org.tizen.lbs.Manager",
+	                              NULL,
+	                              &error);
 
 	if (error && error->message) {
 		if (error->code == G_DBUS_ERROR_ACCESS_DENIED) {
@@ -540,7 +547,7 @@ lbs_client_stop_batch(lbs_client_dbus_h lbs_client)
 			LBS_CLIENT_LOGI("Fail to new proxy ErrCode[%d], Msg[%s]", error->code, error->message);
 			ret = LBS_CLIENT_ERROR_DBUS_CALL;
 		}
-		g_error_free (error);
+		g_error_free(error);
 		g_variant_unref(param);
 		g_variant_unref(method);
 
@@ -559,7 +566,7 @@ lbs_client_stop_batch(lbs_client_dbus_h lbs_client)
 				LBS_CLIENT_LOGI("Fail to proxy call. ErrCode[%d], Msg[%s]", error->code, error->message);
 				ret = LBS_CLIENT_ERROR_DBUS_CALL;
 			}
-			g_error_free (error);
+			g_error_free(error);
 			g_variant_unref(param);
 			g_variant_unref(method);
 
@@ -588,11 +595,11 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 {
 	LBS_CLIENT_LOGD("lbs_client_start");
 
-	g_return_val_if_fail (lbs_client, LBS_CLIENT_ERROR_PARAMETER);
-	g_return_val_if_fail (callback_type, LBS_CLIENT_ERROR_PARAMETER);
+	g_return_val_if_fail(lbs_client, LBS_CLIENT_ERROR_PARAMETER);
+	g_return_val_if_fail(callback_type, LBS_CLIENT_ERROR_PARAMETER);
 
 	lbs_client_dbus_s *handle = (lbs_client_dbus_s *)lbs_client;
-	g_return_val_if_fail (handle->is_started == FALSE, LBS_CLIENT_ERROR_STATUS);
+	g_return_val_if_fail(handle->is_started == FALSE, LBS_CLIENT_ERROR_STATUS);
 
 	GVariant *reg = NULL;
 	GVariant *param = NULL, *method = NULL;
@@ -603,7 +610,7 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 	gchar *app_id = NULL;
 	int ret = LBS_CLIENT_ERROR_NONE;
 
-	signal_path = g_strdup_printf ("%s/%s", SERVICE_PATH, "SAMSUNG");
+	signal_path = g_strdup_printf("%s/%s", SERVICE_PATH, "SAMSUNG");
 	LBS_CLIENT_SECLOG("LBS signal subscribe Object Path [%s]", signal_path);
 
 	if (callback) {
@@ -612,15 +619,15 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 
 		if (callback_type & LBS_CLIENT_LOCATION_CB) {
 			handle->loc_evt_id = g_dbus_connection_signal_subscribe(
-				handle->conn,
-				SERVICE_NAME, //GPS_MANAGER_SERVICE_NAME, /* Sender */
-					"org.tizen.lbs.Position", /* Interface */
-					"PositionChanged", /* Member */
-					signal_path, //GPS_MANAGER_SERVICE_PATH, /* Object */
-					NULL, /* arg0 */
-					G_DBUS_SIGNAL_FLAGS_NONE,
-					__signal_callback, handle,
-					NULL);
+			                         handle->conn,
+			                         SERVICE_NAME, /* Sender */
+			                         "org.tizen.lbs.Position", /* Interface */
+			                         "PositionChanged", /* Member */
+			                         signal_path,
+			                         NULL,
+			                         G_DBUS_SIGNAL_FLAGS_NONE,
+			                         __signal_callback, handle,
+			                         NULL);
 
 			if (handle->loc_evt_id) {
 				LBS_CLIENT_LOGD("Listening Position info");
@@ -631,14 +638,14 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 
 		if (callback_type & LBS_CLIENT_LOCATION_STATUS_CB) {
 			handle->loc_status_evt_id = g_dbus_connection_signal_subscribe(handle->conn,
-					SERVICE_NAME, //GPS_MANAGER_SERVICE_NAME, /* Sender */
-					"org.tizen.lbs.Manager", /* Interface */
-					"StatusChanged", /* Member */
-					SERVICE_PATH, //GPS_MANAGER_SERVICE_PATH, /* Object */
-					NULL, /* arg0 */
-					G_DBUS_SIGNAL_FLAGS_NONE,
-					__signal_callback, handle,
-					NULL);
+			                                                               SERVICE_NAME, /* Sender */
+			                                                               "org.tizen.lbs.Manager", /* Interface */
+			                                                               "StatusChanged", /* Member */
+			                                                               SERVICE_PATH,
+			                                                               NULL,
+			                                                               G_DBUS_SIGNAL_FLAGS_NONE,
+			                                                               __signal_callback, handle,
+			                                                               NULL);
 
 			if (handle->loc_status_evt_id) {
 				LBS_CLIENT_LOGD("Listening location Status");
@@ -648,15 +655,15 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 		}
 
 		if (callback_type & LBS_CLIENT_SATELLITE_CB) {
-			handle->sat_evt_id= g_dbus_connection_signal_subscribe(handle->conn,
-					SERVICE_NAME, //GPS_MANAGER_SERVICE_NAME, /* Sender */
-					"org.tizen.lbs.Satellite", /* Interface */
-					"SatelliteChanged",	/* Member */
-					signal_path, //GPS_MANAGER_SERVICE_PATH, /* Object */
-					NULL, /* arg0 */
-					G_DBUS_SIGNAL_FLAGS_NONE,
-					__signal_callback, handle,
-					NULL);
+			handle->sat_evt_id = g_dbus_connection_signal_subscribe(handle->conn,
+			                                                        SERVICE_NAME, /* Sender */
+			                                                        "org.tizen.lbs.Satellite", /* Interface */
+			                                                        "SatelliteChanged",	/* Member */
+			                                                        signal_path,
+			                                                        NULL,
+			                                                        G_DBUS_SIGNAL_FLAGS_NONE,
+			                                                        __signal_callback, handle,
+			                                                        NULL);
 
 			if (handle->sat_evt_id) {
 				LBS_CLIENT_LOGD("Listening satellite info");
@@ -667,14 +674,14 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 
 		if (callback_type & LBS_CLIENT_NMEA_CB) {
 			handle->nmea_evt_id = g_dbus_connection_signal_subscribe(handle->conn,
-					SERVICE_NAME, /* Sender */
-					"org.tizen.lbs.Nmea", /* Interface */
-					"NmeaChanged",	/* Member */
-					signal_path, //GPS_MANAGER_SERVICE_PATH, /* Object */
-					NULL, /* arg0 */
-					G_DBUS_SIGNAL_FLAGS_NONE,
-					__signal_callback, handle,
-					NULL);
+			                                                         SERVICE_NAME, /* Sender */
+			                                                         "org.tizen.lbs.Nmea", /* Interface */
+			                                                         "NmeaChanged",	/* Member */
+			                                                         signal_path,
+			                                                         NULL,
+			                                                         G_DBUS_SIGNAL_FLAGS_NONE,
+			                                                         __signal_callback, handle,
+			                                                         NULL);
 
 			if (handle->nmea_evt_id) {
 				LBS_CLIENT_LOGD("Listening nmea info");
@@ -685,9 +692,9 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 	}
 	g_free(signal_path);
 
-	// Start
+	/* Start */
 	LBS_CLIENT_LOGD("START: CMD-START");
-	builder = g_variant_builder_new(G_VARIANT_TYPE ("a{sv}"));
+	builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
 	g_variant_builder_add(builder, "{sv}", "CMD", g_variant_new_string("START"));
 
 	g_variant_builder_add(builder, "{sv}", "METHOD", g_variant_new_int32(handle->method));
@@ -701,16 +708,16 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 		}
 	}
 
-	param = g_variant_ref_sink(g_variant_new ("(@a{sv})", g_variant_builder_end(builder)));
+	param = g_variant_ref_sink(g_variant_new("(@a{sv})", g_variant_builder_end(builder)));
 
-	method = g_variant_ref_sink(g_variant_new ("(i)", handle->method));
+	method = g_variant_ref_sink(g_variant_new("(i)", handle->method));
 
-	proxy = g_dbus_proxy_new_sync (handle->conn, // GDBusConnection
-						G_DBUS_PROXY_FLAGS_NONE, //GDbusProxyFlags
-						NULL,SERVICE_NAME,SERVICE_PATH,
-						"org.tizen.lbs.Manager",
-						NULL,
-						&error);
+	proxy = g_dbus_proxy_new_sync(handle->conn,  /* GDBusConnection */
+	                              G_DBUS_PROXY_FLAGS_NONE, /* GDbusProxyFlags */
+	                              NULL, SERVICE_NAME, SERVICE_PATH,
+	                              "org.tizen.lbs.Manager",
+	                              NULL,
+	                              &error);
 
 	if (error && error->message) {
 		if (error->code == G_DBUS_ERROR_ACCESS_DENIED) {
@@ -720,7 +727,7 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 			LBS_CLIENT_LOGI("Fail to new proxy ErrCode[%d], Msg[%s]", error->code, error->message);
 			ret = LBS_CLIENT_ERROR_DBUS_CALL;
 		}
-		g_error_free (error);
+		g_error_free(error);
 		g_variant_unref(param);
 		g_variant_unref(method);
 		lbs_client_signal_unsubcribe(handle);
@@ -729,12 +736,12 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 
 	if (proxy) {
 		reg = g_dbus_proxy_call_sync(proxy,
-				"AddReference",
-				method,
-				G_DBUS_CALL_FLAGS_NONE,
-				-1,
-				NULL,
-				&error);
+		                             "AddReference",
+		                             method,
+		                             G_DBUS_CALL_FLAGS_NONE,
+		                             -1,
+		                             NULL,
+		                             &error);
 
 		if (error && error->message) {
 			if (error->code == G_DBUS_ERROR_ACCESS_DENIED) {
@@ -744,7 +751,7 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 				LBS_CLIENT_LOGI("Fail to new proxy ErrCode[%d], Msg[%s]", error->code, error->message);
 				ret = LBS_CLIENT_ERROR_DBUS_CALL;
 			}
-			g_error_free (error);
+			g_error_free(error);
 			g_variant_unref(param);
 			g_variant_unref(method);
 			lbs_client_signal_unsubcribe(handle);
@@ -756,12 +763,12 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 		}
 
 		reg = g_dbus_proxy_call_sync(proxy,
-				"SetOptions",
-				param,
-				G_DBUS_CALL_FLAGS_NO_AUTO_START,
-				-1,
-				NULL,
-				&error);
+		                             "SetOptions",
+		                             param,
+		                             G_DBUS_CALL_FLAGS_NO_AUTO_START,
+		                             -1,
+		                             NULL,
+		                             &error);
 		if (error && error->message) {
 			if (error->code == G_DBUS_ERROR_ACCESS_DENIED) {
 				LBS_CLIENT_LOGI("Access denied. Msg[%s]", error->message);
@@ -770,7 +777,7 @@ lbs_client_start(lbs_client_dbus_h lbs_client, unsigned int interval, lbs_client
 				LBS_CLIENT_LOGI("Fail to new proxy ErrCode[%d], Msg[%s]", error->code, error->message);
 				ret = LBS_CLIENT_ERROR_DBUS_CALL;
 			}
-			g_error_free (error);
+			g_error_free(error);
 			g_variant_unref(param);
 			g_variant_unref(method);
 
@@ -801,8 +808,8 @@ lbs_client_stop(lbs_client_dbus_h lbs_client)
 	LBS_CLIENT_LOGD("lbs_client_stop");
 
 	lbs_client_dbus_s *handle = (lbs_client_dbus_s *)lbs_client;
-	g_return_val_if_fail (handle, LBS_CLIENT_ERROR_PARAMETER);
-	g_return_val_if_fail (handle->is_started == TRUE, LBS_CLIENT_ERROR_STATUS);
+	g_return_val_if_fail(handle, LBS_CLIENT_ERROR_PARAMETER);
+	g_return_val_if_fail(handle->is_started == TRUE, LBS_CLIENT_ERROR_STATUS);
 
 	int ret = LBS_CLIENT_ERROR_NONE;
 	GVariant *param = NULL, *method = NULL, *reg = NULL;
@@ -813,9 +820,9 @@ lbs_client_stop(lbs_client_dbus_h lbs_client)
 	lbs_client_privacy_signal_unsubcribe(handle);
 	lbs_client_signal_unsubcribe(handle);
 
-	// Stop
+	/* Stop */
 	LBS_CLIENT_LOGD("STOP: CMD-STOP");
-	builder = g_variant_builder_new(G_VARIANT_TYPE ("a{sv}"));
+	builder = g_variant_builder_new(G_VARIANT_TYPE("a{sv}"));
 	g_variant_builder_add(builder, "{sv}", "CMD", g_variant_new_string("STOP"));
 
 	LBS_CLIENT_LOGD("METHOD: %d", handle->method);
@@ -829,17 +836,17 @@ lbs_client_stop(lbs_client_dbus_h lbs_client)
 		}
 	}
 
-	param = g_variant_ref_sink(g_variant_new ("(@a{sv})", g_variant_builder_end(builder)));
+	param = g_variant_ref_sink(g_variant_new("(@a{sv})", g_variant_builder_end(builder)));
 
-	method = g_variant_ref_sink(g_variant_new ("(i)", handle->method));
+	method = g_variant_ref_sink(g_variant_new("(i)", handle->method));
 
 	GDBusProxy *proxy = NULL;
-	proxy = g_dbus_proxy_new_sync (handle->conn, // GDBusConnection
-						G_DBUS_PROXY_FLAGS_NONE, //GDbusProxyFlags
-						NULL,SERVICE_NAME,SERVICE_PATH,
-						"org.tizen.lbs.Manager",
-						NULL,
-						&error);
+	proxy = g_dbus_proxy_new_sync(handle->conn,  /* GDBusConnection */
+	                              G_DBUS_PROXY_FLAGS_NONE, /*GDbusProxyFlags */
+	                              NULL, SERVICE_NAME, SERVICE_PATH,
+	                              "org.tizen.lbs.Manager",
+	                              NULL,
+	                              &error);
 
 	if (error && error->message) {
 		if (error->code == G_DBUS_ERROR_ACCESS_DENIED) {
@@ -849,7 +856,7 @@ lbs_client_stop(lbs_client_dbus_h lbs_client)
 			LBS_CLIENT_LOGI("Fail to new proxy ErrCode[%d], Msg[%s]", error->code, error->message);
 			ret = LBS_CLIENT_ERROR_DBUS_CALL;
 		}
-		g_error_free (error);
+		g_error_free(error);
 		g_variant_unref(param);
 		g_variant_unref(method);
 
@@ -868,7 +875,7 @@ lbs_client_stop(lbs_client_dbus_h lbs_client)
 				LBS_CLIENT_LOGI("Fail to proxy call. ErrCode[%d], Msg[%s]", error->code, error->message);
 				ret = LBS_CLIENT_ERROR_DBUS_CALL;
 			}
-			g_error_free (error);
+			g_error_free(error);
 			g_variant_unref(param);
 			g_variant_unref(method);
 
@@ -882,9 +889,9 @@ lbs_client_stop(lbs_client_dbus_h lbs_client)
 		}
 
 		reg = g_dbus_proxy_call_sync(proxy, "RemoveReference",
-						method,
-						G_DBUS_CALL_FLAGS_NO_AUTO_START,
-						-1, NULL, &error);
+		                             method,
+		                             G_DBUS_CALL_FLAGS_NO_AUTO_START,
+		                             -1, NULL, &error);
 
 		if (error && error->message) {
 			if (error->code == G_DBUS_ERROR_ACCESS_DENIED) {
@@ -894,7 +901,7 @@ lbs_client_stop(lbs_client_dbus_h lbs_client)
 				LBS_CLIENT_LOGI("Fail to proxy call. ErrCode[%d], Msg[%s]", error->code, error->message);
 				ret = LBS_CLIENT_ERROR_DBUS_CALL;
 			}
-			g_error_free (error);
+			g_error_free(error);
 			g_variant_unref(param);
 			g_variant_unref(method);
 
@@ -920,64 +927,66 @@ lbs_client_stop(lbs_client_dbus_h lbs_client)
 EXPORT_API int
 lbs_client_get_nmea(lbs_client_dbus_h lbs_client, int *timestamp, char **nmea)
 {
-	LBS_CLIENT_LOGD("lbs_client_nmea");
-	g_return_val_if_fail (lbs_client, LBS_CLIENT_ERROR_PARAMETER);
-	g_return_val_if_fail (timestamp, LBS_CLIENT_ERROR_PARAMETER);
-	g_return_val_if_fail (nmea, LBS_CLIENT_ERROR_PARAMETER);
+	LBS_CLIENT_LOGD("ENTER >>>");
+	g_return_val_if_fail(lbs_client, LBS_CLIENT_ERROR_PARAMETER);
+	g_return_val_if_fail(timestamp, LBS_CLIENT_ERROR_PARAMETER);
+	g_return_val_if_fail(nmea, LBS_CLIENT_ERROR_PARAMETER);
 
-	GVariant *reg = NULL;
 	GError *error = NULL;
-	lbs_client_dbus_s *handle = (lbs_client_dbus_s *)lbs_client;
+	int ret = LBS_CLIENT_ERROR_NONE;
 
+	lbs_client_dbus_s *handle = (lbs_client_dbus_s *)lbs_client;
 	*timestamp = 0;
 	*nmea = NULL;
 
-	reg = g_dbus_connection_call_sync(handle->conn,
-					SERVICE_NAME,SERVICE_PATH,
-					"org.tizen.lbs.Nmea", /* Interface*/
-					"GetNmea", /* Method name */
-					NULL, /* Param */
-					NULL, /* Ret */
-					G_DBUS_CALL_FLAGS_NONE, /* GDBusCallFlags (G_DBUS_CALL_FLAGS_NONE/G_DBUS_CALL_FLAGS_NO_AUTO_START) */
-					-1, /* timeout msec */
-					NULL, /* cancellable */
-					&error);
+	LbsNmea *proxy = NULL;
+	proxy = lbs_nmea_proxy_new_sync(handle->conn,
+	                                G_DBUS_PROXY_FLAGS_NONE,
+	                                SERVICE_NAME,
+	                                SERVICE_PATH,
+	                                NULL,
+	                                &error);
 
-	if (error) {
-		LBS_CLIENT_LOGE("Fail to get nmea. Error[%s]", error->message);
-		g_error_free (error);
-		return LBS_CLIENT_ERROR_DBUS_CALL;
-	}
+	gint cur_timestamp = 0;
+	gchar *cur_nmea_data = NULL;
 
-	/* Get Ret */
-	if (!reg) {
-		LBS_CLIENT_LOGD("There is no result");
-		return LBS_CLIENT_ERROR_NO_RESULT;
-	} else {
+	if (proxy) {
+		ret = lbs_nmea_call_get_nmea_sync(proxy, &cur_timestamp, &cur_nmea_data, NULL, &error);
+		if (error && error->message) {
+			if (error->code == G_DBUS_ERROR_ACCESS_DENIED) {
+				LBS_CLIENT_LOGE("Access denied. Msg[%s]", error->message);
+				ret = LBS_CLIENT_ERROR_ACCESS_DENIED;
+			} else {
+				LBS_CLIENT_LOGE("Fail to new proxy ErrCode[%d], Msg[%s]", error->code, error->message);
+				ret = LBS_CLIENT_ERROR_DBUS_CALL;
+			}
+			g_error_free(error);
+			lbs_client_signal_unsubcribe(handle);
+			return ret;
+		}
 
-		LBS_CLIENT_LOGD("type : %s", g_variant_get_type(reg));
-		g_variant_get (reg, "(is)", timestamp, nmea);
-		LBS_CLIENT_LOGD("Get NMEA. Timestamp[%d], NMEA[%s]", *timestamp, *nmea);
+		LBS_CLIENT_LOGD("Get NMEA: Timestamp[%d], NMEA[%s]", cur_timestamp, cur_nmea_data);
+		*timestamp = cur_timestamp;
+		*nmea = cur_nmea_data;
 
-		g_variant_unref(reg);
-		reg = NULL;
+		g_object_unref(proxy);
 	}
 
 	return LBS_CLIENT_ERROR_NONE;
 }
 
 static int
-_client_create_connection (lbs_client_dbus_s *client)
+_client_create_connection(lbs_client_dbus_s *client)
 {
 	LBS_CLIENT_LOGD("create connection");
-	g_return_val_if_fail (client, LBS_CLIENT_ERROR_PARAMETER);
+	g_return_val_if_fail(client, LBS_CLIENT_ERROR_PARAMETER);
 	GError *error = NULL;
 
 	client->conn = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
 	if (!client->conn) {
 		if (error && error->message) {
 			LBS_CLIENT_LOGI("Fail to get GBus. ErrCode[%d], Msg[%s]", error->code, error->message);
-			g_error_free (error);
+			g_error_free(error);
 			error = NULL;
 		}
 		LBS_CLIENT_LOGI("Fail to get addr of bus.");
@@ -989,27 +998,27 @@ _client_create_connection (lbs_client_dbus_s *client)
 	return LBS_CLIENT_ERROR_NONE;
 }
 
-static void _glib_log (const gchar *log_domain, GLogLevelFlags log_level,
-		const gchar *msg, gpointer user_data)
+static void _glib_log(const gchar *log_domain, GLogLevelFlags log_level,
+                      const gchar *msg, gpointer user_data)
 {
 	LBS_CLIENT_LOGD("GLIB[%d] : %s", log_level, msg);
 }
 
-// The reason why we seperate this from start is to support IPC for db operation between a server and a client.
+/* The reason why we seperate this from start is to support IPC for db operation between a server and a client. */
 EXPORT_API int
 lbs_client_create(lbs_client_method_e method, lbs_client_dbus_h *lbs_client)
 {
 	LBS_CLIENT_LOGD("lbs_client_create");
-	g_return_val_if_fail (lbs_client, LBS_CLIENT_ERROR_PARAMETER);
+	g_return_val_if_fail(lbs_client, LBS_CLIENT_ERROR_PARAMETER);
 
 	int ret = LBS_CLIENT_ERROR_NONE;
 
 	lbs_client_dbus_s *client = g_new0(lbs_client_dbus_s, 1);
-	g_return_val_if_fail (client, LBS_CLIENT_ERROR_MEMORY);
+	g_return_val_if_fail(client, LBS_CLIENT_ERROR_MEMORY);
 
-	g_log_set_default_handler (_glib_log, NULL);
+	g_log_set_default_handler(_glib_log, NULL);
 
-	ret = _client_create_connection (client);
+	ret = _client_create_connection(client);
 	if (ret != LBS_CLIENT_ERROR_NONE) {
 		g_free(client);
 		return ret;
@@ -1023,7 +1032,7 @@ lbs_client_create(lbs_client_method_e method, lbs_client_dbus_h *lbs_client)
 }
 
 EXPORT_API int
-lbs_client_destroy (lbs_client_dbus_h lbs_client)
+lbs_client_destroy(lbs_client_dbus_h lbs_client)
 {
 	LBS_CLIENT_LOGD("lbs_client_destroy");
 	g_return_val_if_fail(lbs_client, LBS_CLIENT_ERROR_PARAMETER);
@@ -1035,7 +1044,6 @@ lbs_client_destroy (lbs_client_dbus_h lbs_client)
 	handle->batch_cb = NULL;
 	handle->user_data = NULL;
 
-	//TODO : disconnect
 	if (handle->conn) {
 		g_object_unref(handle->conn);
 		handle->conn = NULL;

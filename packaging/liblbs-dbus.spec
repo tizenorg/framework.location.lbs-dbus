@@ -1,10 +1,10 @@
-Name:		lbs-dbus
+Name:		liblbs-dbus
 Summary:	Dbus interface for Location based service
-Version:	0.3.1
+Version:	0.3.3
 Release:	1
 Group:		Framework/Location
 License:	Apache-2.0
-Source0:	lbs-dbus-%{version}.tar.gz
+Source0:    %{name}-%{version}.tar.gz
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:	cmake
@@ -16,26 +16,16 @@ BuildRequires:	pkgconfig(gio-unix-2.0)
 BuildRequires:	pkgconfig(capi-appfw-app-manager)
 BuildRequires:	pkgconfig(capi-appfw-package-manager)
 BuildRequires:	pkgconfig(pkgmgr-info)
-BuildRequires:	python
-BuildRequires:	python-xml
 
 %description
 LBS dbus interface
 
-%package -n	liblbs-dbus
-Summary:	LBS dbus library
-Group:	TO_BE/FILLED_IN
-Requires(post): sys-assert
-
-%description -n liblbs-dbus
-LBS client API library
-
-%package -n	liblbs-dbus-devel
+%package devel
 Summary:	Telephony client API (devel)
 Group:		Development/Libraries
 Requires:	liblbs-dbus = %{version}-%{release}
 
-%description -n liblbs-dbus-devel
+%description devel
 LBS client API library (devel)
 
 
@@ -44,6 +34,10 @@ LBS client API library (devel)
 
 
 %build
+export CFLAGS="$CFLAGS -DTIZEN_DEBUG_ENABLE"
+export CXXFLAGS="$CXXFLAGS -DTIZEN_DEBUG_ENABLE"
+export FFLAGS="$FFLAGS -DTIZEN_DEBUG_ENABLE"
+
 export CFLAGS+=" -Wno-unused-local-typedefs "
 cmake . -DCMAKE_INSTALL_PREFIX=%{_prefix} \
 
@@ -58,14 +52,14 @@ rm -rf %{buildroot}
 %postun -p /sbin/ldconfig
 
 
-%files -n liblbs-dbus
+%files
 %manifest liblbs-dbus.manifest
 %defattr(-,root,root,-)
 #%doc COPYING
 %{_libdir}/*.so.*
 %{_prefix}/etc/dbus-1/system.d/*
 
-%files -n liblbs-dbus-devel
+%files devel
 %defattr(-,root,root,-)
 %{_includedir}/lbs-dbus/*.h
 %{_libdir}/pkgconfig/*.pc

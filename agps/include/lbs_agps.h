@@ -27,19 +27,19 @@ __BEGIN_DECLS
 #include <gio/gio.h>
 
 typedef enum {
-	LBS_AGPS_ERROR_NONE = 0x0,
-	LBS_AGPS_ERROR_UNKNOWN,
-	LBS_AGPS_ERROR_PARAMETER,
-	LBS_AGPS_ERROR_MEMORY,
-	LBS_AGPS_ERROR_CONNECTION,
-	LBS_AGPS_ERROR_STATUS,
-	LBS_AGPS_ERROR_DBUS_CALL,
-	LBS_AGPS_ERROR_NO_RESULT,
+    LBS_AGPS_ERROR_NONE = 0x0,
+    LBS_AGPS_ERROR_UNKNOWN,
+    LBS_AGPS_ERROR_PARAMETER,
+    LBS_AGPS_ERROR_MEMORY,
+    LBS_AGPS_ERROR_CONNECTION,
+    LBS_AGPS_ERROR_STATUS,
+    LBS_AGPS_ERROR_DBUS_CALL,
+    LBS_AGPS_ERROR_NO_RESULT,
 } lbs_agps_error_e;
 
-int lbs_agps_sms (const char *msg_body, int msg_size);
-int lbs_agps_wap_push (const char *push_header, const char *push_body, int push_body_size);
-int lbs_set_option (const char *option);
+int lbs_agps_sms(const char *msg_body, int msg_size);
+int lbs_agps_wap_push(const char *push_header, const char *push_body, int push_body_size);
+int lbs_set_option(const char *option);
 
 __END_DECLS
 
