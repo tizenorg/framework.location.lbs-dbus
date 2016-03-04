@@ -1,6 +1,6 @@
 Name:		liblbs-dbus
 Summary:	Dbus interface for Location based service
-Version:	0.3.3
+Version:	0.3.4
 Release:	1
 Group:		Framework/Location
 License:	Apache-2.0
